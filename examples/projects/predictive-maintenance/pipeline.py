@@ -59,6 +59,14 @@ def read_stream() -> pw.Table:
 # ----------- Feature Engineering -----------
 
 WINDOW_NS = 60 * 1_000_000_000  # 60 seconds sliding window
+EPSILON = 1e-6
+TEMP_BASELINE = 80.0
+TEMP_RANGE = 40.0
+PEAK_RATIO_THRESHOLD = 5.0
+STD_VIB_THRESHOLD = 10.0
+TEMP_WEIGHT = 0.4
+VIB_WEIGHT = 0.6
+ALERT_THRESHOLD = 0.7
 
 
 def rolling_features(stream: pw.Table) -> pw.Table:
@@ -86,7 +94,7 @@ def rolling_features(stream: pw.Table) -> pw.Table:
         mean_press=agg.mean_press,
         max_vib=agg.max_vib,
         std_vib=agg.std_vib,
-        peak_ratio=agg.max_vib / (agg.mean_vib + 1e-6),
+        peak_ratio=agg.max_vib / (agg.mean_vib + EPSILON),
         sample_count=agg.count,
     )
     return features
@@ -98,9 +106,9 @@ def rolling_features(stream: pw.Table) -> pw.Table:
 def simple_failure_score(mean_temp: float, peak_ratio: float, std_vib: float) -> float:
     # Replace with a call to your trained model (e.g., ONNXRuntime / sklearn).
     # Here we craft a lightweight heuristic combining temp and vibration stats.
-    temp_risk = max(0.0, (mean_temp - 80.0) / 40.0)
-    vib_risk = min(1.0, peak_ratio / 5.0 + std_vib / 10.0)
-    return max(0.0, min(1.0, 0.4 * temp_risk + 0.6 * vib_risk))
+    temp_risk = max(0.0, (mean_temp - TEMP_BASELINE) / TEMP_RANGE)
+    vib_risk = min(1.0, peak_ratio / PEAK_RATIO_THRESHOLD + std_vib / STD_VIB_THRESHOLD)
+    return max(0.0, min(1.0, TEMP_WEIGHT * temp_risk + VIB_WEIGHT * vib_risk))
 
 
 def score(features: pw.Table) -> pw.Table:
@@ -114,7 +122,7 @@ def score(features: pw.Table) -> pw.Table:
     )
     return scored.select(
         *pw.this,
-        alert=pw.this.score >= 0.7,
+        alert=pw.this.score >= ALERT_THRESHOLD,
     )
 
 
@@ -147,4 +155,3 @@ if __name__ == "__main__":
     results = score(features)
     write_outputs(results)
     pw.run()
-

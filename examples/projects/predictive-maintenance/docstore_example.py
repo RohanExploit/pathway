@@ -10,11 +10,12 @@ DOCS_PATH = os.environ.get("MAINT_DOCS_PATH", "./maintenance-docs")
 
 def build_docstore() -> document_store.DocumentStore:
     docs = pw.io.fs.read(DOCS_PATH, format="binary", with_metadata=True)
-    retriever = vector_store.VectorStoreServer.from_documents(
-        docs=docs,
-        embedder=vector_store.InProcessEmbedder("text-embedding-3-small"),
+    # VectorStoreServer is itself a DocumentStore; reuse its knn factory to satisfy DocumentStore API.
+    vector_server = vector_store.VectorStoreServer(
+        docs,
+        embedder=vector_store.SentenceTransformerEmbedder("all-MiniLM-L6-v2"),
     )
-    return document_store.DocumentStore(docs, retriever_factory=retriever)
+    return vector_server
 
 
 if __name__ == "__main__":
