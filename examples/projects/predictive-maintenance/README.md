@@ -23,7 +23,7 @@ export ALERTS_TOPIC="maintenance-alerts"
 ```
 2) Install requirements (Pathway already bundled in the repo):
 ```bash
-pip install -e ."[dev]"
+pip install -e '.[dev]'
 ```
 3) Run:
 ```bash
@@ -42,4 +42,3 @@ This builds a vector index; you can adapt it to serve via the LLM xPack servers 
 ## Notes
 - The example keeps dependencies minimal and uses built-in Pathway connectors and stateful computations.
 - Replace the stubbed scoring function with your trained model (e.g., ONNX, scikit-learn) as needed.
-
