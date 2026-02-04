@@ -106,7 +106,7 @@ def rolling_features(stream: pw.Table) -> pw.Table:
 def simple_failure_score(mean_temp: float, peak_ratio: float, std_vib: float) -> float:
     # Replace with a call to your trained model (e.g., ONNXRuntime / sklearn).
     # Here we craft a lightweight heuristic combining temp and vibration stats.
-    temp_risk = max(0.0, (mean_temp - TEMP_BASELINE) / TEMP_RANGE)
+    temp_risk = min(1.0, max(0.0, (mean_temp - TEMP_BASELINE) / TEMP_RANGE))
     vib_risk = min(1.0, peak_ratio / PEAK_RATIO_THRESHOLD + std_vib / STD_VIB_THRESHOLD)
     return max(0.0, min(1.0, TEMP_WEIGHT * temp_risk + VIB_WEIGHT * vib_risk))
 

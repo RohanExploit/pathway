@@ -21,10 +21,6 @@ def build_docstore() -> document_store.DocumentStore:
 if __name__ == "__main__":
     store = build_docstore()
     # Example: query docstore from code (for production use the LLM servers)
-    @pw.udf
-    def dummy_query(q: str) -> str:
-        return q
-
     query_table = pw.debug.table_from_list([{"query": "How to replace the coolant pump?"}])
     results = store.retrieve_query(query_table, "query", k=3)
     pw.io.csv.write(results, "docstore_sample_results.csv")
